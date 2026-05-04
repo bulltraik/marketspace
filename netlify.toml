@@ -7,6 +7,12 @@
   VITE_SUPABASE_URL = "https://ddttbqomoeotjmdujneq.supabase.co"
   VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fYREEc0dinLl232_9nouzg_zbi9PQZF"
 
+# Proxy API requests to the PHP backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://YOUR-RENDER-URL.onrender.com/api/:splat"
+  status = 200
+
 # Redirect all requests to index.html for Single Page Application routing
 [[redirects]]
   from = "/*"
