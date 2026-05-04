@@ -1,46 +1,20 @@
-// pages/owner/ads.ts
-// Advertisement management — list, create, edit, delete ads.
+import { renderOwnerShell } from '../../components/OwnerShell'
 
-import { api } from '../../services/api'
-import type { Advertisement } from '../../types'
-
-export async function init(): Promise<void> {
+export async function init() {
   const app = document.getElementById('app')
   if (!app) return
 
-  app.innerHTML = '<p>Loading advertisements...</p>'
+  const content = `
+    <div class="owner-content-header">
+      <h1>Advertisement</h1>
+      <button class="btn btn-primary btn-sm">Create New Ad</button>
+    </div>
+    <div class="empty-state-card" style="padding: 4rem 2rem;">
+      <svg style="margin: 0 auto 1rem; color: #9ca3af; width: 48px; height: 48px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      <p>No active advertisements.</p>
+      <span>Create an ad to promote your shop on the homepage.</span>
+    </div>
+  `
 
-  try {
-    const res = await api.get('/owner/ads')
-    const ads: Advertisement[] = await res.json()
-
-    app.innerHTML = `
-      <section id="owner-ads">
-        <div class="page-header">
-          <h1>Advertisements</h1>
-          <button id="create-ad-btn">+ Create Ad</button>
-        </div>
-        <div id="ads-list">
-          ${ads.length === 0
-            ? '<p>No advertisements yet. Create your first ad!</p>'
-            : ads.map(ad => `
-                <div class="ad-card ${ad.is_active ? '' : 'inactive'}" data-ad-id="${ad.id}">
-                  ${ad.promo_image_url ? `<img src="${ad.promo_image_url}" alt="Ad image" class="ad-image" />` : ''}
-                  <div class="ad-info">
-                    <p class="ad-copy">${ad.copy_text || 'No copy text'}</p>
-                    <span class="ad-font-style">${ad.font_style || 'default'}</span>
-                  </div>
-                  <div class="ad-actions">
-                    <button class="edit-ad" data-id="${ad.id}">Edit</button>
-                    <button class="delete-ad" data-id="${ad.id}">Delete</button>
-                  </div>
-                </div>
-              `).join('')
-          }
-        </div>
-      </section>
-    `
-  } catch (err) {
-    app.innerHTML = '<p>Failed to load advertisements.</p>'
-  }
+  app.innerHTML = renderOwnerShell('ads', content)
 }

@@ -1,47 +1,28 @@
-// pages/owner/dashboard.ts
-// Shop owner dashboard — shop stats, recent orders, quick links.
+import { renderOwnerShell } from '../../components/OwnerShell'
 
-import { api } from '../../services/api'
-import type { Shop, Order } from '../../types'
-
-export async function init(): Promise<void> {
+export async function init() {
   const app = document.getElementById('app')
   if (!app) return
 
-  app.innerHTML = '<p>Loading owner dashboard...</p>'
+  const content = `
+    <div class="owner-content-header">
+      <h1>Analytics</h1>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+      <div style="padding: 1.5rem; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+        <span style="color: #6b7280; font-size: 0.875rem; font-weight: 500;">Total Sales</span>
+        <div style="font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem; color: #111827;">$0.00</div>
+      </div>
+      <div style="padding: 1.5rem; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+        <span style="color: #6b7280; font-size: 0.875rem; font-weight: 500;">Total Orders</span>
+        <div style="font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem; color: #111827;">0</div>
+      </div>
+      <div style="padding: 1.5rem; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+        <span style="color: #6b7280; font-size: 0.875rem; font-weight: 500;">Shop Views</span>
+        <div style="font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem; color: #111827;">0</div>
+      </div>
+    </div>
+  `
 
-  try {
-    const [shopRes, ordersRes] = await Promise.all([
-      api.get('/owner/shop'),
-      api.get('/owner/orders'),
-    ])
-
-    const shop: Shop = await shopRes.json()
-    const orders: Order[] = await ordersRes.json()
-
-    const pendingCount = orders.filter(o => o.status === 'pending').length
-
-    app.innerHTML = `
-      <section id="owner-dashboard">
-        <h1>${shop.name}</h1>
-        <div id="owner-stats">
-          <div class="stat-card">
-            <span class="stat-value">${orders.length}</span>
-            <span class="stat-label">Total Orders</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-value">${pendingCount}</span>
-            <span class="stat-label">Pending</span>
-          </div>
-        </div>
-        <nav id="owner-quick-links">
-          <a href="/owner/products">Manage Products</a>
-          <a href="/owner/ads">Advertisements</a>
-          <a href="/owner/settings">Shop Settings</a>
-        </nav>
-      </section>
-    `
-  } catch (err) {
-    app.innerHTML = '<p>Failed to load dashboard.</p>'
-  }
+  app.innerHTML = renderOwnerShell('analytics', content)
 }
