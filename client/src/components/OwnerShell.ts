@@ -13,13 +13,49 @@ export function renderOwnerShell(activeTab: string, contentHtml: string): string
     </a>
   `).join('')
 
+  // Add a small script to handle mobile sidebar toggling
+  setTimeout(() => {
+    const toggleBtn = document.getElementById('mobile-menu-toggle')
+    const sidebar = document.getElementById('owner-sidebar')
+    const overlay = document.getElementById('sidebar-overlay')
+
+    function closeSidebar() {
+      sidebar?.classList.remove('open')
+      overlay?.classList.remove('open')
+    }
+
+    toggleBtn?.addEventListener('click', () => {
+      sidebar?.classList.add('open')
+      overlay?.classList.add('open')
+    })
+
+    overlay?.addEventListener('click', closeSidebar)
+  }, 0)
+
   return `
     <div class="owner-layout">
-      <aside class="owner-sidebar">
+      <!-- Mobile header -->
+      <div class="mobile-dashboard-header">
+        <button id="mobile-menu-toggle" class="btn btn-outline" style="padding: 0.5rem;">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+        <span style="font-weight: 600; font-size: 1.1rem;">Dashboard</span>
+      </div>
+
+      <!-- Overlay for mobile -->
+      <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+      <!-- Sidebar -->
+      <aside id="owner-sidebar" class="owner-sidebar">
+        <div class="sidebar-close-btn" onclick="document.getElementById('owner-sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('open');">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </div>
         <nav>
           ${navHtml}
         </nav>
       </aside>
+
+      <!-- Main Content -->
       <section class="owner-content">
         ${contentHtml}
       </section>

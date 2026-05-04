@@ -161,7 +161,7 @@ export async function init() {
           const { data: { session } } = await supabase.auth.getSession()
           const userId = session?.user.id || 'unknown'
           const fileExt = file.name.split('.').pop()
-          const fileName = \`\${userId}/\${Date.now()}.\${fileExt}\`
+          const fileName = `${userId}/${Date.now()}.${fileExt}`
 
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('product-images')
