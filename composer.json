@@ -1,0 +1,13 @@
+{
+    "name": "marketspace/api",
+    "description": "MarketSpace — Multi-tenant e-commerce API",
+    "type": "project",
+    "require": {
+        "php": ">=8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "MarketSpace\\": "src/"
+        }
+    }
+}
