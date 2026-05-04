@@ -10,7 +10,7 @@ export async function init() {
   app.innerHTML = renderOwnerShell('ads', `
     <div class="owner-content-header">
       <h1>Advertisement</h1>
-      <button class="btn btn-primary btn-sm">Create New Ad</button>
+      <button id="btn-add-ad" class="btn btn-primary btn-sm">Create New Ad</button>
     </div>
     <div style="text-align:center; padding: 4rem; color: var(--text-muted);">
       Loading advertisements...
@@ -85,12 +85,108 @@ export async function init() {
     const finalHtml = `
       <div class="owner-content-header">
         <h1>Advertisement</h1>
-        <button class="btn btn-primary btn-sm">Create New Ad</button>
+        <button id="btn-add-ad" class="btn btn-primary btn-sm">Create New Ad</button>
       </div>
       ${contentHtml}
+
+      <!-- Create Ad Modal -->
+      <div id="add-ad-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 12px; width: 100%; max-width: 500px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+          <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Create New Advertisement</h2>
+          <form id="add-ad-form">
+            <div class="form-group">
+              <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Promotional Copy *</label>
+              <textarea id="ad-copy" class="form-control" rows="3" required placeholder="Catchy headline or description..."></textarea>
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Font Style</label>
+              <select id="ad-font" class="form-control">
+                <option value="modern">Modern (Inter)</option>
+                <option value="classic">Classic (Serif)</option>
+                <option value="technical">Technical (Monospace)</option>
+                <option value="elegant">Elegant (Cursive)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Promo Image (Optional)</label>
+              <input type="file" id="ad-image" class="form-control" accept="image/*">
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
+              <button type="button" id="btn-cancel-ad" class="btn btn-outline btn-sm">Cancel</button>
+              <button type="submit" id="btn-save-ad" class="btn btn-primary btn-sm">Create Ad</button>
+            </div>
+          </form>
+        </div>
+      </div>
     `
 
     app.innerHTML = renderOwnerShell('ads', finalHtml)
+
+    // Event Listeners for Modal
+    const btnAdd = document.getElementById('btn-add-ad')
+    const modal = document.getElementById('add-ad-modal')
+    const btnCancel = document.getElementById('btn-cancel-ad')
+    const form = document.getElementById('add-ad-form') as HTMLFormElement
+
+    btnAdd?.addEventListener('click', () => {
+      if (modal) modal.style.display = 'flex'
+    })
+
+    btnCancel?.addEventListener('click', () => {
+      if (modal) {
+        modal.style.display = 'none'
+        form.reset()
+      }
+    })
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      
+      const btnSave = document.getElementById('btn-save-ad') as HTMLButtonElement
+      btnSave.disabled = true
+      btnSave.innerText = 'Creating...'
+
+      try {
+        const copy_text = (document.getElementById('ad-copy') as HTMLTextAreaElement).value
+        const font_style = (document.getElementById('ad-font') as HTMLSelectElement).value
+        const fileInput = document.getElementById('ad-image') as HTMLInputElement
+        const file = fileInput.files?.[0]
+
+        let imageUrl = null
+
+        if (file) {
+          const { data: { session } } = await supabase.auth.getSession()
+          const userId = session?.user.id || 'unknown'
+          const fileExt = file.name.split('.').pop()
+          const fileName = \`\${userId}/\${Date.now()}.\${fileExt}\`
+
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('ad-images')
+            .upload(fileName, file)
+
+          if (uploadError) throw new Error('Image upload failed: ' + uploadError.message)
+          imageUrl = uploadData.path
+        }
+
+        const saveRes = await api.post('/owner/ads', {
+          copy_text,
+          font_style,
+          promo_image_url: imageUrl
+        })
+
+        if (!saveRes.ok) {
+          const errData = await saveRes.json()
+          throw new Error(errData.message || 'Failed to create ad')
+        }
+        
+        init()
+
+      } catch (err: any) {
+        alert(err.message)
+        btnSave.disabled = false
+        btnSave.innerText = 'Create Ad'
+      }
+    })
 
   } catch (error: any) {
     app.innerHTML = renderOwnerShell('ads', `

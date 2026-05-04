@@ -7,11 +7,10 @@ export async function init() {
   const app = document.getElementById('app')
   if (!app) return
 
-  // 1. Render loading state inside the shell
   app.innerHTML = renderOwnerShell('products', `
     <div class="owner-content-header">
       <h1>Your Products</h1>
-      <button class="btn btn-primary btn-sm">+ Add Product</button>
+      <button id="btn-add-product" class="btn btn-primary btn-sm">+ Add Product</button>
     </div>
     <div style="text-align:center; padding: 4rem; color: var(--text-muted);">
       Loading products...
@@ -19,7 +18,6 @@ export async function init() {
   `)
 
   try {
-    // 2. Fetch data from Render backend
     const res = await api.get('/owner/products')
     
     if (!res.ok) {
@@ -35,7 +33,6 @@ export async function init() {
 
     let tbodyHtml = ''
     
-    // 3. Render Empty State or Data Table
     if (products.length === 0) {
       tbodyHtml = `
         <tr>
@@ -66,7 +63,7 @@ export async function init() {
               ${imageUrl}
               <span style="font-weight: 500; color: var(--text-main);">${product.name}</span>
             </td>
-            <td>$${product.price}</td>
+            <td>$${parseFloat(product.price.toString()).toFixed(2)}</td>
             <td><span class="badge">${product.category_id ? 'Categorized' : 'Uncategorized'}</span></td>
             <td style="text-align: right;"><a class="action-link" href="/owner/products/edit?id=${product.id}">Edit</a></td>
           </tr>
@@ -77,7 +74,7 @@ export async function init() {
     const content = `
       <div class="owner-content-header">
         <h1>Your Products</h1>
-        <button class="btn btn-primary btn-sm">+ Add Product</button>
+        <button id="btn-add-product" class="btn btn-primary btn-sm">+ Add Product</button>
       </div>
       
       <table class="data-table">
@@ -93,10 +90,109 @@ export async function init() {
           ${tbodyHtml}
         </tbody>
       </table>
+
+      <!-- Add Product Modal -->
+      <div id="add-product-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 12px; width: 100%; max-width: 500px; padding: 2rem; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+          <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Add New Product</h2>
+          <form id="add-product-form">
+            <div class="form-group">
+              <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Product Name *</label>
+              <input type="text" id="p-name" class="form-control" required placeholder="e.g. Wireless Headphones">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Price ($) *</label>
+              <input type="number" id="p-price" step="0.01" min="0" class="form-control" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Description</label>
+              <textarea id="p-desc" class="form-control" rows="3" placeholder="Describe your product..."></textarea>
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Product Image</label>
+              <input type="file" id="p-image" class="form-control" accept="image/*">
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
+              <button type="button" id="btn-cancel" class="btn btn-outline btn-sm">Cancel</button>
+              <button type="submit" id="btn-save" class="btn btn-primary btn-sm">Save Product</button>
+            </div>
+          </form>
+        </div>
+      </div>
     `
 
-    // Render final content
     app.innerHTML = renderOwnerShell('products', content)
+
+    // Event Listeners for Modal
+    const btnAdd = document.getElementById('btn-add-product')
+    const modal = document.getElementById('add-product-modal')
+    const btnCancel = document.getElementById('btn-cancel')
+    const form = document.getElementById('add-product-form') as HTMLFormElement
+
+    btnAdd?.addEventListener('click', () => {
+      if (modal) modal.style.display = 'flex'
+    })
+
+    btnCancel?.addEventListener('click', () => {
+      if (modal) {
+        modal.style.display = 'none'
+        form.reset()
+      }
+    })
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      
+      const btnSave = document.getElementById('btn-save') as HTMLButtonElement
+      btnSave.disabled = true
+      btnSave.innerText = 'Saving...'
+
+      try {
+        const name = (document.getElementById('p-name') as HTMLInputElement).value
+        const price = parseFloat((document.getElementById('p-price') as HTMLInputElement).value)
+        const desc = (document.getElementById('p-desc') as HTMLTextAreaElement).value
+        const fileInput = document.getElementById('p-image') as HTMLInputElement
+        const file = fileInput.files?.[0]
+
+        let imageUrl = null
+
+        // If file is selected, upload to Supabase Storage first
+        if (file) {
+          const { data: { session } } = await supabase.auth.getSession()
+          const userId = session?.user.id || 'unknown'
+          const fileExt = file.name.split('.').pop()
+          const fileName = \`\${userId}/\${Date.now()}.\${fileExt}\`
+
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('product-images')
+            .upload(fileName, file)
+
+          if (uploadError) throw new Error('Image upload failed: ' + uploadError.message)
+          imageUrl = uploadData.path
+        }
+
+        // Send to PHP Backend
+        const saveRes = await api.post('/owner/products', {
+          name,
+          price,
+          description: desc || null,
+          image_url: imageUrl
+        })
+
+        if (!saveRes.ok) {
+          const errData = await saveRes.json()
+          throw new Error(errData.message || 'Failed to save product')
+        }
+        
+        // Refresh page to show new data
+        init()
+
+      } catch (err: any) {
+        alert(err.message)
+        btnSave.disabled = false
+        btnSave.innerText = 'Save Product'
+      }
+    })
 
   } catch (error: any) {
     app.innerHTML = renderOwnerShell('products', `
