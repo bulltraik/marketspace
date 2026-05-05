@@ -8,6 +8,13 @@ export async function init(): Promise<void> {
   const app = document.getElementById('app')
   if (!app) return
 
+  // If user is already logged in, skip the login page
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) {
+    window.location.href = '/dashboard'
+    return
+  }
+
   app.innerHTML = `
     <section class="auth-page">
       <div class="auth-card">
@@ -48,6 +55,11 @@ export async function init(): Promise<void> {
     const email    = (document.getElementById('login-email') as HTMLInputElement).value
     const password = (document.getElementById('login-password') as HTMLInputElement).value
     const errorEl  = document.getElementById('login-error')!
+    const loginBtn = document.getElementById('login-btn') as HTMLButtonElement
+
+    errorEl.style.display = 'none'
+    loginBtn.disabled = true
+    loginBtn.textContent = 'Signing in...'
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -55,14 +67,27 @@ export async function init(): Promise<void> {
       if (error) {
         errorEl.textContent = error.message || 'Login failed'
         errorEl.style.display = 'block'
+        loginBtn.disabled = false
+        loginBtn.textContent = 'Sign In'
         return
       }
 
-      // Supabase client automatically stores the session
+      if (!data.session) {
+        errorEl.textContent = 'Login succeeded but no session was returned. Check your Supabase API key.'
+        errorEl.style.display = 'block'
+        loginBtn.disabled = false
+        loginBtn.textContent = 'Sign In'
+        return
+      }
+
+      // Session is now stored in localStorage by the Supabase client.
+      // Redirect to dashboard.
       window.location.href = '/dashboard'
     } catch (err: any) {
       errorEl.textContent = err.message || 'Network error'
       errorEl.style.display = 'block'
+      loginBtn.disabled = false
+      loginBtn.textContent = 'Sign In'
     }
   })
 
