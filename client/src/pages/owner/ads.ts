@@ -19,7 +19,7 @@ export async function init() {
 
   try {
     const res = await api.get('/owner/ads')
-    
+
     if (!res.ok) {
       if (res.status === 401 || res.status === 403) {
         window.location.href = '/login'
@@ -27,12 +27,12 @@ export async function init() {
       }
       throw new Error('Failed to fetch ads')
     }
-    
+
     const json = await res.json()
     const ads: Advertisement[] = json.data || []
 
     let contentHtml = ''
-    
+
     if (ads.length === 0) {
       contentHtml = `
         <div class="empty-state-card" style="padding: 4rem 2rem;">
@@ -55,13 +55,13 @@ export async function init() {
           </thead>
           <tbody>
             ${ads.map(ad => {
-              let imageUrl = '<div style="width: 80px; height: 40px; background: #f3f4f6; border-radius: 4px;"></div>'
-              if (ad.promo_image_url) {
-                const { data } = supabase.storage.from('ad-images').getPublicUrl(ad.promo_image_url)
-                imageUrl = `<img src="${data.publicUrl}" alt="Ad" style="width: 80px; height: 40px; border-radius: 4px; object-fit: cover;" />`
-              }
-              
-              return `
+        let imageUrl = '<div style="width: 80px; height: 40px; background: #f3f4f6; border-radius: 4px;"></div>'
+        if (ad.promo_image_url) {
+          const { data } = supabase.storage.from('ad-images').getPublicUrl(ad.promo_image_url)
+          imageUrl = `<img src="${data.publicUrl}" alt="Ad" style="width: 80px; height: 40px; border-radius: 4px; object-fit: cover;" />`
+        }
+
+        return `
                 <tr>
                   <td>${imageUrl}</td>
                   <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -76,7 +76,7 @@ export async function init() {
                   <td style="text-align: right;"><a class="action-link" href="/owner/ads/edit?id=${ad.id}">Edit</a></td>
                 </tr>
               `
-            }).join('')}
+      }).join('')}
           </tbody>
         </table>
       `
@@ -141,7 +141,7 @@ export async function init() {
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault()
-      
+
       const btnSave = document.getElementById('btn-save-ad') as HTMLButtonElement
       btnSave.disabled = true
       btnSave.innerText = 'Creating...'
@@ -158,7 +158,7 @@ export async function init() {
           const { data: { session } } = await supabase.auth.getSession()
           const userId = session?.user.id || 'unknown'
           const fileExt = file.name.split('.').pop()
-          const fileName = \`\${userId}/\${Date.now()}.\${fileExt}\`
+          const fileName = `${userId}/${Date.now()}.${fileExt}`
 
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('ad-images')
@@ -178,7 +178,7 @@ export async function init() {
           const errData = await saveRes.json()
           throw new Error(errData.message || 'Failed to create ad')
         }
-        
+
         init()
 
       } catch (err: any) {

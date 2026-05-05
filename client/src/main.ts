@@ -4,30 +4,27 @@
 import { supabase } from './services/supabase'
 
 const routes: Record<string, () => Promise<void>> = {
-  '/':                () => import('./pages/customer/browse').then(m => m.init()),
-  '/dashboard':       () => import('./pages/customer/dashboard').then(m => m.init()),
-  '/cart':            () => import('./pages/customer/cart').then(m => m.init()),
-  '/orders':          () => import('./pages/customer/orders').then(m => m.init()),
+  '/': () => import('./pages/customer/browse').then(m => m.init()),
+  '/dashboard': () => import('./pages/customer/dashboard').then(m => m.init()),
+  '/cart': () => import('./pages/customer/cart').then(m => m.init()),
+  '/orders': () => import('./pages/customer/orders').then(m => m.init()),
   '/owner/dashboard': () => import('./pages/owner/dashboard').then(m => m.init()),
-  '/owner/products':  () => import('./pages/owner/products').then(m => m.init()),
-  '/owner/ads':       () => import('./pages/owner/ads').then(m => m.init()),
-  '/owner/settings':  () => import('./pages/owner/settings').then(m => m.init()),
-  '/login':           () => import('./pages/auth/login').then(m => m.init()),
-  '/register':        () => import('./pages/auth/register').then(m => m.init()),
-  '/verify':          () => import('./pages/auth/verify').then(m => m.init()),
+  '/owner/products': () => import('./pages/owner/products').then(m => m.init()),
+  '/owner/ads': () => import('./pages/owner/ads').then(m => m.init()),
+  '/owner/settings': () => import('./pages/owner/settings').then(m => m.init()),
+  '/login': () => import('./pages/auth/login').then(m => m.init()),
+  '/register': () => import('./pages/auth/register').then(m => m.init()),
+  '/verify': () => import('./pages/auth/verify').then(m => m.init()),
 }
 
 async function route(): Promise<void> {
   const path = window.location.pathname
   const handler = routes[path]
 
-  // Update nav button dynamically based on auth status
   const navBtn = document.getElementById('nav-auth-btn') as HTMLAnchorElement | null
   if (navBtn) {
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
-      // Very naive check for role based on route structure preference, ideally we fetch profile
-      // But for layout purposes, linking to /dashboard will redirect appropriately if we check role later
       navBtn.href = '/dashboard'
       navBtn.innerHTML = 'Dashboard'
     } else {

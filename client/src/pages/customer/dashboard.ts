@@ -16,8 +16,16 @@ export async function init(): Promise<void> {
       api.get('/customer/orders'),
     ])
 
-    const profile: Profile = await profileRes.json()
-    const orders: Order[] = await ordersRes.json()
+    if (profileRes.status === 401 || profileRes.status === 403) {
+      window.location.href = '/login'
+      return
+    }
+
+    const profileJson = await profileRes.json()
+    const ordersJson = await ordersRes.json()
+
+    const profile: Profile = profileJson.data || profileJson
+    const orders: Order[] = ordersJson.data || []
 
     app.innerHTML = `
       <section id="customer-dashboard">

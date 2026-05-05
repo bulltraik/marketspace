@@ -17,7 +17,7 @@ export async function init() {
 
   try {
     const res = await api.get('/owner/shop')
-    
+
     if (!res.ok) {
       if (res.status === 401 || res.status === 403) {
         window.location.href = '/login'
@@ -25,7 +25,7 @@ export async function init() {
       }
       throw new Error('Failed to fetch shop settings')
     }
-    
+
     const json = await res.json()
     const shop = json.data || {}
 
@@ -79,7 +79,7 @@ export async function init() {
       try {
         const updateRes = await api.put('/owner/shop', { name, bio })
         if (!updateRes.ok) throw new Error('Failed to update shop')
-        
+
         btnSave.innerText = 'Saved!'
         setTimeout(() => {
           btnSave.disabled = false
@@ -114,7 +114,7 @@ export async function init() {
         const { data: { session } } = await supabase.auth.getSession()
         const userId = session?.user.id || 'unknown'
         const fileExt = file.name.split('.').pop()
-        const fileName = \`\${userId}/\${Date.now()}.\${fileExt}\`
+        const fileName = `${userId}/${Date.now()}.${fileExt}`
 
         // Upload to private bucket
         const { data: uploadData, error: uploadError } = await supabase.storage
