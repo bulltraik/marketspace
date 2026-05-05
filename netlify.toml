@@ -5,7 +5,7 @@
 
 [build.environment]
   VITE_SUPABASE_URL = "https://ddttbqomoeotjmdujneq.supabase.co"
-  VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fYREEc0dinLl232_9nouzg_zbi9PQZF"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkdHRicW9tb2VvdGptZHVqbmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjIxMjEsImV4cCI6MjA5MzAzODEyMX0.Ta5FPuhKEvHSEbSGFt0krJeIXHzdrNCmtakmy2jvaw0"
 
 # Proxy API requests to the PHP backend
 [[redirects]]
