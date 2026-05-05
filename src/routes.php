@@ -64,6 +64,7 @@ $router->get('/api/health', function ($request, $params) {
     Response::json([
         'status'         => 'ok',
         'supabase_url'   => $supabaseUrl,
+        'anon_key_start' => substr($anonKey, 0, 10) . '...',
         'supabase_http'  => $httpCode,
         'timestamp'      => date('c'),
     ]);
